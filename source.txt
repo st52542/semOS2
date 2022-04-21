@@ -1,0 +1,2 @@
+https://discoposse.com/2012/01/23/csv-yeah-you-know-me-powershell-and-the-import-csv-cmdlet-part-1/
+https://www.red-gate.com/simple-talk/sysadmin/powershell/how-to-use-parameters-in-powershell/

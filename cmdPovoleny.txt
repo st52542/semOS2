@@ -1,0 +1,1 @@
+cmdcku se zada poweshell.exe -executionpolicy bypass -> to mi nastavi spousteni prikazu
