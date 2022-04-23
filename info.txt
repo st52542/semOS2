@@ -1,0 +1,12 @@
+pouzite cm pro PS a atributy
+Get-ComputerInfo
+	WindowsProductName
+	WindowsCurrentVersion
+	BiosManufacturer
+	CsDNSHostName
+	CsDomain
+	OsTotalVisibleMemorySize
+	OsArchitecture
+systeminfo
+	Hotfix(s)
+
