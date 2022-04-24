@@ -1,8 +1,9 @@
 ﻿<#
 .SYNOPSIS
-Compare input file and actual info PC
+Compare input file and actual info PC. Check the log on and log of on actual computer and save security log into security.txt file.
 .DESCRIPTION
-Compare CSV file with actual PC info. This info get from Get-ComputerInfo and systeminfo
+Compare CSV file with actual PC info. This info get from Get-ComputerInfo and systeminfo.
+Check log on and log off on current computer for last 7 days and write it to the output. Saves the  last 24 hour security log into the file.
 .PARAMETER Path
 Path to CSV file
 .EXAMPLE
@@ -10,48 +11,19 @@ Path to CSV file
 .NOTES
 Created by JN & DŠ
 #>
-# pro vypsani helpu po zadani get-help .\...
-# pro argument
 $pathFile = $args[0]
-# import CSV
-# diky excelu jsem vymazal vsechny ciselne hodnoty 
-# dale je potreba vyresit co delat pokud v nazvu promenne je () - zatim jsem vypustil
 $csvImported = Import-Csv $pathFile -Delimiter ";"
-# cesta k logovacimu file
 $Logfile = ".\log.txt"
-# prihlasovaci udaje k mailu
 $Username = "testnnpda";
-# sem zadej heslo co mas na fb ... kvuli nechtene pristupu
-$Password = "*******";
-# info z Get-ComputerInfo
-Write-Host "ziskavani informaci z PC"
-$infoActualPCCMPInfo = Get-ComputerInfo
-Write-Host "ziskavani podrobnejsich informaci z PC"
-$infoActualPCSystenInfo = systeminfo
-[bool] $itsOK = $false
-# -eq porovnava stringy
-# porovnani importovanych dat
-Write-Host "zacina kontrola zadanych informaci"
-foreach ($info in $csvImported){
-    if(($info.WindowsProductName -eq $infoActualPCCMPInfo.WindowsProductName) -and
-    ($info.WindowsVersion -eq $infoActualPCCMPInfo.WindowsVersion) -and
-    ($info.BiosManufacturer -eq $infoActualPCCMPInfo.BiosManufacturer) -and
-    ($info.CsDNSHostName -eq $infoActualPCCMPInfo.CsDNSHostName) -and
-    ($info.CsDomain -eq $infoActualPCCMPInfo.CsDomain) -and
-    ($info.OsTotalVisibleMemorySize -eq $infoActualPCCMPInfo.OsTotalVisibleMemorySize) -and
-    ($info.OsArchitecture -eq $infoActualPCCMPInfo.OsArchitecture)){
-        $itsOK = $true
-    }
-}
-# logovani v local PC
-function Write-Log
-{
+$Password = "Nnpda123";
+
+function Write-Log{
 Param ([string]$LogString)
     $Stamp = (Get-Date).toString("yyyy/MM/dd HH:mm:ss")
     $LogMessage = "$Stamp $LogString"
     Add-content $LogFile -value $LogMessage
 }
-# odeslani mailu
+
 function Send-ToEmail([string]$email, [string]$problemLog){
 
     $message = new-object Net.Mail.MailMessage;
@@ -67,6 +39,30 @@ function Send-ToEmail([string]$email, [string]$problemLog){
     write-host "Byl odeslan email";
  }
 
+
+Write-Host "ziskavani informaci z PC"
+$infoActualPCCMPInfo = Get-ComputerInfo
+Write-Host "ziskavani podrobnejsich informaci z PC"
+$infoActualPCSystenInfo = systeminfo
+
+[bool] $itsOK = $false
+
+Write-Host "zacina kontrola zadanych informaci"
+
+foreach ($info in $csvImported){
+    if(($info.WindowsProductName -eq $infoActualPCCMPInfo.WindowsProductName) -and
+    ($info.WindowsVersion -eq $infoActualPCCMPInfo.WindowsVersion) -and
+    ($info.BiosManufacturer -eq $infoActualPCCMPInfo.BiosManufacturer) -and
+    ($info.CsDNSHostName -eq $infoActualPCCMPInfo.CsDNSHostName) -and
+    ($info.CsDomain -eq $infoActualPCCMPInfo.CsDomain) -and
+    ($info.OsTotalVisibleMemorySize -eq $infoActualPCCMPInfo.OsTotalVisibleMemorySize) -and
+    ($info.OsArchitecture -eq $infoActualPCCMPInfo.OsArchitecture)){
+        $itsOK = $true
+    }
+}
+
+
+
 if($itsOK){
     Write-Host "pocitac" $infoActualPCCMPInfo.CsDNSHostName "byl nalezen a je v poradku"
     Write-Log "Vse v poradku"
@@ -78,7 +74,6 @@ if($itsOK){
 
 Write-Host "Kontrola neoprávněných přístupů"
 
-#Tenhle kód vypíše všechny přihlášení a odhlášení z počítače za posledních 7 dní, nutné pustit jako administrátor, protože sahá do security logu
 $logs = get-eventlog system -ComputerName $env:COMPUTERNAME -source Microsoft-Windows-Winlogon -After (Get-Date).AddDays(-7);
 $res = @();ForEach ($log in $logs) {
     if($log.instanceid -eq 7001) {
@@ -89,8 +84,7 @@ $res = @();ForEach ($log in $logs) {
     Continue
     }
 
-    $res += New-Object PSObject -Property
-    @{Time = $log.TimeWritten;
+    $res += New-Object PSObject -Property @{Time = $log.TimeWritten;
     "Event" = $type;
     User = (New-Object System.Security.Principal.SecurityIdentifier $Log.ReplacementStrings[1]).Translate([System.Security.Principal.NTAccount])
     }
@@ -98,17 +92,12 @@ $res = @();ForEach ($log in $logs) {
 
 $res
 
- #Vypíše posledních 10 záznamů z logu security pro přihalšovací akce
- #Nutné předtím pustit script failedLogon.ps1 pro nasimulování neoprávněných vstupů
-$securityEvents = Get-WinEvent -FilterHashtable @{LogName='Security';ID=4625} -MaxEvents 10
-
-Write-Output $securityEvents
-#zapsání security logu do souboru 
 $date = (get-date).adddays(-1)
 get-eventlog security |
 where {$_.timewritten -gt $date} |
-out-file c:\security.txt
+out-file .\security.txt
 
+#poslat email , že byl proveden security check 
 Write-host "Log uložen do souboru security.txt"
 Write-host "Kontrola neoprávněných přístupů dokončena"
 
