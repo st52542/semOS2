@@ -3,3 +3,5 @@ https://www.red-gate.com/simple-talk/sysadmin/powershell/how-to-use-parameters-i
 https://community.spiceworks.com/how_to/170332-how-to-get-cpu-information-in-windows-powershell
 https://winbuzzer.com/2020/09/08/how-to-check-pc-specs-with-windows-10-system-information-powershell-and-more-xcxwbt/
 https://keithga.wordpress.com/2015/05/17/adding-help-to-your-powershell-script/
+https://www.codetwo.com/admins-blog/how-to-check-event-logs-with-powershell-get-eventlog/
+https://adamtheautomator.com/windows-security-events/

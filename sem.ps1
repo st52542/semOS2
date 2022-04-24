@@ -76,5 +76,39 @@ if($itsOK){
     Send-ToEmail  -email "testnnpda@gmail.com" -problemLog "Byl nalezen problem s PC";
 }
 
+Write-Host "Kontrola neoprávněných přístupů"
 
+#Tenhle kód vypíše všechny přihlášení a odhlášení z počítače za posledních 7 dní, nutné pustit jako administrátor, protože sahá do security logu
+$logs = get-eventlog system -ComputerName $env:COMPUTERNAME -source Microsoft-Windows-Winlogon -After (Get-Date).AddDays(-7);
+$res = @();ForEach ($log in $logs) {
+    if($log.instanceid -eq 7001) {
+        $type = "Logon"
+    } Elseif ($log.instanceid -eq 7002){
+    $type="Logoff"
+    } Else {
+    Continue
+    }
+
+    $res += New-Object PSObject -Property
+    @{Time = $log.TimeWritten;
+    "Event" = $type;
+    User = (New-Object System.Security.Principal.SecurityIdentifier $Log.ReplacementStrings[1]).Translate([System.Security.Principal.NTAccount])
+    }
+};
+
+$res
+
+ #Vypíše posledních 10 záznamů z logu security pro přihalšovací akce
+ #Nutné předtím pustit script failedLogon.ps1 pro nasimulování neoprávněných vstupů
+$securityEvents = Get-WinEvent -FilterHashtable @{LogName='Security';ID=4625} -MaxEvents 10
+
+Write-Output $securityEvents
+#zapsání security logu do souboru 
+$date = (get-date).adddays(-1)
+get-eventlog security |
+where {$_.timewritten -gt $date} |
+out-file c:\security.txt
+
+Write-host "Log uložen do souboru security.txt"
+Write-host "Kontrola neoprávněných přístupů dokončena"
 
