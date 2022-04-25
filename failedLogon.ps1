@@ -21,6 +21,6 @@
      $i++
  } Until ($i -eq 30)
 
-$securityEvent = Get-WinEvent -FilterHashtable @{LogName='Security';ID=4625} -MaxEvents 10
+Get-WinEvent -FilterHashtable @{LogName='Security';ID=4625} -MaxEvents 10
 
-Write-Output $securityEvent
+

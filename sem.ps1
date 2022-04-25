@@ -11,6 +11,8 @@ Path to CSV file
 .NOTES
 Created by JN & DŠ
 #>
+
+
 $pathFile = $args[0]
 $csvImported = Import-Csv $pathFile -Delimiter ";"
 $Logfile = ".\log.txt"
@@ -37,6 +39,34 @@ function Send-ToEmail([string]$email, [string]$head, [string]$body){
     $smtp.send($message)
     write-host "Byl odeslan email"
  }
+
+Write-Host "Provádění kontroly přihlášení"
+. .\failedLogon.ps1
+Write-Host "Kontrola přihlášení dokončena"
+
+Write-Host "Kontrola neoprávněných přístupů"
+
+$logs = get-eventlog system -ComputerName $env:COMPUTERNAME -source Microsoft-Windows-Winlogon -After (Get-Date).AddDays(-7);
+$res = @();ForEach ($log in $logs) {
+    if($log.instanceid -eq 7001) {
+        $type = "Logon"
+    } Elseif ($log.instanceid -eq 7002){
+    $type="Logoff"
+    } Else {
+    Continue
+    }
+
+    $res += New-Object PSObject -Property @{Time = $log.TimeWritten;
+    "Event" = $type;
+    User = (New-Object System.Security.Principal.SecurityIdentifier $Log.ReplacementStrings[1]).Translate([System.Security.Principal.NTAccount])
+    }
+};
+
+$res
+
+Write-host "Kontrola neoprávněných přístupů dokončena"
+
+Send-ToEmail  -email "testnnpda@gmail.com" -head "Hlaseni o probehnuti bezpecnostni kontroly " -body "Probehla bezpecnostni kontrola "
 
 Write-Host "ziskavani informaci z PC"
 $infoActualPCCMPInfo = Get-ComputerInfo
@@ -66,34 +96,11 @@ if($itsOK){
     Send-ToEmail  -email "testnnpda@gmail.com" -head "Hlaseni o problemu behem kontrole PC " -body "PC nebyl nalezen a nebo neni v poradku "
 }
 
-Write-Host "Kontrola neoprávněných přístupů"
-
-$logs = get-eventlog system -ComputerName $env:COMPUTERNAME -source Microsoft-Windows-Winlogon -After (Get-Date).AddDays(-7);
-$res = @();ForEach ($log in $logs) {
-    if($log.instanceid -eq 7001) {
-        $type = "Logon"
-    } Elseif ($log.instanceid -eq 7002){
-    $type="Logoff"
-    } Else {
-    Continue
-    }
-
-    $res += New-Object PSObject -Property @{Time = $log.TimeWritten;
-    "Event" = $type;
-    User = (New-Object System.Security.Principal.SecurityIdentifier $Log.ReplacementStrings[1]).Translate([System.Security.Principal.NTAccount])
-    }
-};
-
-$res
 
 $date = (get-date).adddays(-1)
 get-eventlog security |
 where {$_.timewritten -gt $date} |
 out-file .\security.txt
 
-Send-ToEmail  -email "testnnpda@gmail.com" -head "Hlaseni o probehnuti bezpecnostni kontroly " -body "Probehla bezpecnostni kontrola "
 
-write-host "Byl odeslan email"
 Write-host "Log uložen do souboru security.txt"
-Write-host "Kontrola neoprávněných přístupů dokončena"
-
