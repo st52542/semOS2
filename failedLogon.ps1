@@ -20,7 +20,3 @@
      Start-Process -FilePath PowerShell -Credential $storedCredential
      $i++
  } Until ($i -eq 30)
-
-Get-WinEvent -FilterHashtable @{LogName='Security';ID=4625} -MaxEvents 10
-
-

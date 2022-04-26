@@ -17,7 +17,7 @@ $pathFile = $args[0]
 $csvImported = Import-Csv $pathFile -Delimiter ";"
 $Logfile = ".\log.txt"
 $Username = "testnnpda"
-$Password = "*******"
+$Password = "*********"
 [bool] $itsOK = $false
 
 function Write-Log([string]$LogString){
@@ -42,6 +42,8 @@ function Send-ToEmail([string]$email, [string]$head, [string]$body){
 
 Write-Host "Provádění kontroly přihlášení"
 . .\failedLogon.ps1
+
+Get-WinEvent -FilterHashtable @{LogName='Security';ID=4625} -MaxEvents 10
 Write-Host "Kontrola přihlášení dokončena"
 
 Write-Host "Kontrola neoprávněných přístupů"
