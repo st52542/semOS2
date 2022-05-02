@@ -17,7 +17,7 @@ $pathFile = $args[0]
 $csvImported = Import-Csv $pathFile -Delimiter ";"
 $Logfile = ".\log.txt"
 $Username = "testnnpda"
-$Password = "Nnpda123"
+$Password = "********"
 [bool] $itsOK = $false
 
 function Write-Log([string]$LogString){
